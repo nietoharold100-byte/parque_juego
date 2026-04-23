@@ -1,118 +1,208 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Casilla from './Casilla';
 import './Tablero.css';
 
-const SERPIENTES = { 99: 78, 95: 75, 92: 88, 89: 68, 74: 53, 64: 60, 62: 19, 49: 11, 46: 25, 16: 6 };
-const ESCALERAS  = { 4: 14, 9: 31, 20: 38, 28: 84, 40: 59, 51: 67, 63: 81, 71: 91 };
+const SERPIENTES = { 99:78, 95:75, 92:88, 89:68, 74:53, 64:60, 62:19, 49:11, 46:25, 16:6 };
+const ESCALERAS  = { 4:14, 9:31, 20:38, 28:84, 40:59, 51:67, 63:81, 71:91 };
 
-const DADOS = () => Math.floor(Math.random() * 6) + 1;
+function tirarDado() { return Math.floor(Math.random() * 6) + 1; }
 
 function Tablero() {
-  const [posiciones, setPosiciones] = useState([0, 0]);
-  const [turno, setTurno] = useState(0);
-  const [dado, setDado] = useState(null);
-  const [mensaje, setMensaje] = useState('¡Turno del Jugador 1 🔴!');
-  const [ganador, setGanador] = useState(null);
-  const [historial, setHistorial] = useState([]);
+  const [posiciones, setPosiciones]   = useState([0, 0]);
+  const [turno, setTurno]             = useState(0);
+  const [dado, setDado]               = useState(null);
+  const [dadoAnimando, setDadoAnimando] = useState(false);
+  const [fichaAnimando, setFichaAnimando] = useState(null);
+  const [mensaje, setMensaje]         = useState('¡Turno del Jugador 1 🔴!');
+  const [ganador, setGanador]         = useState(null);
+  const [historial, setHistorial]     = useState([]);
+  const [modoDrag, setModoDrag]       = useState(false);
+  const [dadoLanzado, setDadoLanzado] = useState(false);
 
-  const lanzarDado = () => {
-    if (ganador) return;
-
-    const resultado = DADOS();
-    setDado(resultado);
-
-    const nuevasPosiciones = [...posiciones];
-    let pos = nuevasPosiciones[turno] + resultado;
-    let info = `J${turno + 1}: sacó ${resultado}`;
+  const moverJugador = (jugadorIdx, nuevaPos, resultado) => {
+    let pos = nuevaPos;
+    let info = `J${jugadorIdx + 1}: sacó ${resultado} → casilla ${pos}`;
 
     if (pos > 100) {
-      info += ` → se pasa (queda en ${nuevasPosiciones[turno]})`;
-      setMensaje(`⛔ Te pasas! Necesitas exacto para llegar a 100. Turno J${turno === 0 ? 2 : 1}`);
-    } else {
-      if (SERPIENTES[pos]) {
-        info += ` → 🐍 Serpiente! ${pos} → ${SERPIENTES[pos]}`;
-        pos = SERPIENTES[pos];
-        setMensaje(`🐍 ¡Serpiente! Bajaste al ${pos}. Turno J${turno === 0 ? 2 : 1}`);
-      } else if (ESCALERAS[pos]) {
-        info += ` → 🪜 Escalera! ${pos} → ${ESCALERAS[pos]}`;
-        pos = ESCALERAS[pos];
-        setMensaje(`🪜 ¡Escalera! Subiste al ${pos}. Turno J${turno === 0 ? 2 : 1}`);
-      } else {
-        setMensaje(`Turno J${turno === 0 ? 2 : 1} ${turno === 0 ? '🔵' : '🔴'}`);
-      }
-
-      nuevasPosiciones[turno] = pos;
-
-      if (pos === 100) {
-        setGanador(turno + 1);
-        setMensaje(`🏆 ¡Jugador ${turno + 1} ${turno === 0 ? '🔴' : '🔵'} GANÓ!`);
-      }
+      setMensaje(`⛔ ¡Te pasas! Quédate en ${posiciones[jugadorIdx]}. Turno J${jugadorIdx === 0 ? 2 : 1}`);
+      setHistorial(prev => [`J${jugadorIdx+1}: sacó ${resultado} → se pasa`, ...prev.slice(0,7)]);
+      setTurno(prev => prev === 0 ? 1 : 0);
+      setDadoLanzado(false);
+      return;
     }
 
+    if (SERPIENTES[pos]) {
+      info += ` 🐍→${SERPIENTES[pos]}`;
+      pos = SERPIENTES[pos];
+      setMensaje(`🐍 ¡Serpiente! Bajaste al ${pos}. Turno J${jugadorIdx === 0 ? 2 : 1}`);
+    } else if (ESCALERAS[pos]) {
+      info += ` 🪜→${ESCALERAS[pos]}`;
+      pos = ESCALERAS[pos];
+      setMensaje(`🪜 ¡Escalera! Subiste al ${pos}. Turno J${jugadorIdx === 0 ? 2 : 1}`);
+    } else {
+      setMensaje(`Turno J${jugadorIdx === 0 ? 2 : 1} ${jugadorIdx === 0 ? '🔵' : '🔴'}`);
+    }
+
+    setFichaAnimando(jugadorIdx + 1);
+    setTimeout(() => setFichaAnimando(null), 600);
+
+    const nuevas = [...posiciones];
+    nuevas[jugadorIdx] = pos;
+    setPosiciones(nuevas);
     setHistorial(prev => [info, ...prev.slice(0, 7)]);
-    setPosiciones(nuevasPosiciones);
-    setTurno(prev => (prev === 0 ? 1 : 0));
+
+    if (pos === 100) {
+      setGanador(jugadorIdx + 1);
+      setMensaje(`🏆 ¡Jugador ${jugadorIdx + 1} ${jugadorIdx === 0 ? '🔴' : '🔵'} GANÓ!`);
+      return;
+    }
+
+    setTurno(prev => prev === 0 ? 1 : 0);
+    setDadoLanzado(false);
+  };
+
+  const lanzarDado = () => {
+    if (ganador || modoDrag) return;
+    setDadoAnimando(true);
+    let count = 0;
+    const intervalo = setInterval(() => {
+      setDado(tirarDado());
+      count++;
+      if (count >= 8) {
+        clearInterval(intervalo);
+        setDadoAnimando(false);
+        const resultado = tirarDado();
+        setDado(resultado);
+        setDadoLanzado(true);
+        moverJugador(turno, posiciones[turno] + resultado, resultado);
+      }
+    }, 80);
+  };
+
+  const handleDrop = (casillaDrop) => {
+    if (!modoDrag || !dadoLanzado || ganador) return;
+    const resultado = dado;
+    const destEsperado = posiciones[turno] + resultado;
+    if (casillaDrop !== Math.min(destEsperado, 100)) {
+      setMensaje(`⚠️ Debes mover exactamente ${resultado} casillas (a la ${Math.min(destEsperado,100)})`);
+      return;
+    }
+    moverJugador(turno, destEsperado, resultado);
+  };
+
+  const lanzarDadoModo = () => {
+    if (ganador || dadoLanzado) return;
+    setDadoAnimando(true);
+    let count = 0;
+    const intervalo = setInterval(() => {
+      setDado(tirarDado());
+      count++;
+      if (count >= 8) {
+        clearInterval(intervalo);
+        setDadoAnimando(false);
+        const resultado = tirarDado();
+        setDado(resultado);
+        setDadoLanzado(true);
+        setMensaje(`🎲 Sacaste ${resultado}. ¡Arrastra tu ficha ${resultado} casillas!`);
+      }
+    }, 80);
   };
 
   const reiniciar = () => {
     setPosiciones([0, 0]);
-    setTurno(0);
-    setDado(null);
-    setGanador(null);
+    setTurno(0); setDado(null);
+    setGanador(null); setDadoLanzado(false);
     setMensaje('¡Turno del Jugador 1 🔴!');
     setHistorial([]);
   };
 
-  // Construir tablero en zigzag (100 → 1)
+  // Construir tablero zigzag
   const casillas = [];
   for (let fila = 9; fila >= 0; fila--) {
     const filaNum = 9 - fila;
-    const inicio = filaNum % 2 === 0
-      ? fila * 10 + 1
-      : fila * 10 + 10;
     for (let col = 0; col < 10; col++) {
-      const num = filaNum % 2 === 0 ? inicio + col : inicio - col;
+      const num = filaNum % 2 === 0
+        ? fila * 10 + 1 + col
+        : fila * 10 + 10 - col;
       const jugadoresAqui = posiciones
-        .map((pos, i) => (pos === num ? i + 1 : null))
+        .map((pos, i) => pos === num ? i + 1 : null)
         .filter(Boolean);
-      const especial = SERPIENTES[num]
-        ? 'serpiente-cabeza'
-        : ESCALERAS[num]
-        ? 'escalera-inicio'
-        : '';
+      const especial = SERPIENTES[num] ? 'serpiente-cabeza'
+                     : ESCALERAS[num]  ? 'escalera-inicio' : '';
       casillas.push(
-        <Casilla key={num} numero={num} jugadores={jugadoresAqui} especial={especial} />
+        <Casilla
+          key={num}
+          numero={num}
+          jugadores={jugadoresAqui}
+          especial={especial}
+          onDrop={handleDrop}
+          fichaAnimando={fichaAnimando}
+        />
       );
     }
   }
 
+  const dadoEmoji = ['', '⚀','⚁','⚂','⚃','⚄','⚅'];
+
   return (
     <div className="juego">
-      <div className="tablero">{casillas}</div>
+      <div className="tablero-wrap">
+        <div className="tablero">{casillas}</div>
+        <div className="leyenda">
+          <span className="leyenda-item serpiente">🐍 Serpiente = bajas</span>
+          <span className="leyenda-item escalera">🪜 Escalera = subes</span>
+        </div>
+      </div>
 
       <div className="panel">
-        <div className="estado">{mensaje}</div>
+        <div className={`estado ${ganador ? 'estado-ganador' : ''}`}>{mensaje}</div>
 
         <div className="posiciones">
-          <p>🔴 J1: casilla <strong>{posiciones[0]}</strong></p>
-          <p>🔵 J2: casilla <strong>{posiciones[1]}</strong></p>
+          <div className={`pos-card ${turno === 0 && !ganador ? 'activo' : ''}`}>
+            🔴 J1 — casilla <strong>{posiciones[0]}</strong>
+          </div>
+          <div className={`pos-card ${turno === 1 && !ganador ? 'activo' : ''}`}>
+            🔵 J2 — casilla <strong>{posiciones[1]}</strong>
+          </div>
         </div>
 
-        {dado && <div className="dado">🎲 {dado}</div>}
+        <div className="modo-toggle">
+          <button
+            className={`modo-btn ${!modoDrag ? 'activo' : ''}`}
+            onClick={() => { setModoDrag(false); setDadoLanzado(false); }}
+          >🤖 Auto</button>
+          <button
+            className={`modo-btn ${modoDrag ? 'activo' : ''}`}
+            onClick={() => { setModoDrag(true); setDadoLanzado(false); }}
+          >🖐 Drag</button>
+        </div>
+
+        {dado && (
+          <div className={`dado ${dadoAnimando ? 'dado-animando' : 'dado-resultado'}`}>
+            {dadoEmoji[dado]}
+          </div>
+        )}
 
         {!ganador ? (
-          <button className="btn" onClick={lanzarDado}>
-            🎲 Lanzar dado — J{turno + 1} {turno === 0 ? '🔴' : '🔵'}
-          </button>
+          modoDrag ? (
+            <button className="btn" onClick={lanzarDadoModo} disabled={dadoLanzado}>
+              {dadoLanzado ? '🖐 Arrastra tu ficha' : '🎲 Lanzar dado'}
+            </button>
+          ) : (
+            <button className="btn" onClick={lanzarDado}>
+              🎲 Lanzar — J{turno + 1} {turno === 0 ? '🔴' : '🔵'}
+            </button>
+          )
         ) : (
-          <button className="btn ganador" onClick={reiniciar}>
-            🔄 Jugar de nuevo
-          </button>
+          <button className="btn btn-ganador" onClick={reiniciar}>🔄 Jugar de nuevo</button>
         )}
 
         <div className="historial">
-          <h3>Historial</h3>
-          {historial.map((h, i) => <p key={i}>• {h}</p>)}
+          <h3>📜 Historial</h3>
+          {historial.length === 0
+            ? <p className="sin-historial">Aún no hay movimientos</p>
+            : historial.map((h, i) => <p key={i} className="hist-item">• {h}</p>)
+          }
         </div>
       </div>
     </div>

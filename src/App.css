@@ -1,13 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: radial-gradient(ellipse at top, #1a1a4e 0%, #0d0d1a 100%);
+  min-height: 100vh;
+  font-family: 'Nunito', sans-serif;
+}
+
 .App {
   text-align: center;
-  font-family: Arial, sans-serif;
-  background: #1a1a2e;
+  padding: 20px 10px;
   min-height: 100vh;
-  padding: 20px;
 }
 
 .App h1 {
-  color: white;
-  font-size: 32px;
+  font-family: 'Fredoka One', cursive;
+  color: #FFD700;
+  font-size: clamp(24px, 5vw, 48px);
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+  margin-bottom: 6px;
+  letter-spacing: 1px;
+}
+
+.subtitulo {
+  color: #aaa;
+  font-size: clamp(12px, 2vw, 16px);
   margin-bottom: 20px;
 }
