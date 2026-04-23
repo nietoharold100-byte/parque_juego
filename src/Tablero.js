@@ -8,16 +8,16 @@ const ESCALERAS  = { 4:14, 9:31, 20:38, 28:84, 40:59, 51:67, 63:81, 71:91 };
 function tirarDado() { return Math.floor(Math.random() * 6) + 1; }
 
 function Tablero() {
-  const [posiciones, setPosiciones]   = useState([0, 0]);
-  const [turno, setTurno]             = useState(0);
-  const [dado, setDado]               = useState(null);
+  const [posiciones, setPosiciones]     = useState([0, 0]);
+  const [turno, setTurno]               = useState(0);
+  const [dado, setDado]                 = useState(null);
   const [dadoAnimando, setDadoAnimando] = useState(false);
   const [fichaAnimando, setFichaAnimando] = useState(null);
-  const [mensaje, setMensaje]         = useState('¡Turno del Jugador 1 🔴!');
-  const [ganador, setGanador]         = useState(null);
-  const [historial, setHistorial]     = useState([]);
-  const [modoDrag, setModoDrag]       = useState(false);
-  const [dadoLanzado, setDadoLanzado] = useState(false);
+  const [mensaje, setMensaje]           = useState('¡Turno del Jugador 1 🔴!');
+  const [ganador, setGanador]           = useState(null);
+  const [historial, setHistorial]       = useState([]);
+  const [modoDrag, setModoDrag]         = useState(false);
+  const [dadoLanzado, setDadoLanzado]   = useState(false);
 
   const moverJugador = (jugadorIdx, nuevaPos, resultado) => {
     let pos = nuevaPos;
@@ -84,9 +84,18 @@ function Tablero() {
     const resultado = dado;
     const destEsperado = posiciones[turno] + resultado;
     if (casillaDrop !== Math.min(destEsperado, 100)) {
-      setMensaje(`⚠️ Debes mover exactamente ${resultado} casillas (a la ${Math.min(destEsperado,100)})`);
+      setMensaje(`⚠️ Debes soltar en la casilla ${Math.min(destEsperado, 100)}`);
       return;
     }
+    moverJugador(turno, destEsperado, resultado);
+  };
+
+  // Drop desde el panel (ficha en posición 0)
+  const handleDropDesdePanel = (e) => {
+    e.preventDefault();
+    if (!modoDrag || !dadoLanzado || ganador) return;
+    const resultado = dado;
+    const destEsperado = posiciones[turno] + resultado;
     moverJugador(turno, destEsperado, resultado);
   };
 
@@ -143,6 +152,7 @@ function Tablero() {
   }
 
   const dadoEmoji = ['', '⚀','⚁','⚂','⚃','⚄','⚅'];
+  const fichaEmoji = ['🔴', '🔵'];
 
   return (
     <div className="juego">
@@ -158,12 +168,31 @@ function Tablero() {
         <div className={`estado ${ganador ? 'estado-ganador' : ''}`}>{mensaje}</div>
 
         <div className="posiciones">
-          <div className={`pos-card ${turno === 0 && !ganador ? 'activo' : ''}`}>
-            🔴 J1 — casilla <strong>{posiciones[0]}</strong>
-          </div>
-          <div className={`pos-card ${turno === 1 && !ganador ? 'activo' : ''}`}>
-            🔵 J2 — casilla <strong>{posiciones[1]}</strong>
-          </div>
+          {[0, 1].map((idx) => (
+            <div
+              key={idx}
+              className={`pos-card ${turno === idx && !ganador ? 'activo' : ''}`}
+            >
+              <div className="pos-info">
+                <span
+                  className={`ficha-panel ${fichaAnimando === idx + 1 ? 'ficha-animando' : ''} ${
+                    modoDrag && dadoLanzado && turno === idx && posiciones[idx] === 0 ? 'ficha-draggable' : ''
+                  }`}
+                  draggable={modoDrag && dadoLanzado && turno === idx}
+                  onDragStart={(e) => e.dataTransfer.setData('jugador', idx + 1)}
+                  title={modoDrag && dadoLanzado && turno === idx ? 'Arrastra esta ficha al tablero' : ''}
+                >
+                  {fichaEmoji[idx]}
+                </span>
+                <span>
+                  J{idx + 1} — {posiciones[idx] === 0 ? 'inicio' : `casilla ${posiciones[idx]}`}
+                </span>
+              </div>
+              {posiciones[idx] === 0 && modoDrag && dadoLanzado && turno === idx && (
+                <span className="drag-hint">¡Arrástrala!</span>
+              )}
+            </div>
+          ))}
         </div>
 
         <div className="modo-toggle">
@@ -186,11 +215,11 @@ function Tablero() {
         {!ganador ? (
           modoDrag ? (
             <button className="btn" onClick={lanzarDadoModo} disabled={dadoLanzado}>
-              {dadoLanzado ? '🖐 Arrastra tu ficha' : '🎲 Lanzar dado'}
+              {dadoLanzado ? `🖐 Arrastra ${fichaEmoji[turno]} a casilla ${Math.min(posiciones[turno] + (dado||0), 100)}` : '🎲 Lanzar dado'}
             </button>
           ) : (
             <button className="btn" onClick={lanzarDado}>
-              🎲 Lanzar — J{turno + 1} {turno === 0 ? '🔴' : '🔵'}
+              🎲 Lanzar — J{turno + 1} {fichaEmoji[turno]}
             </button>
           )
         ) : (

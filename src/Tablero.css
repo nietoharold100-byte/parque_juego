@@ -199,3 +199,40 @@
   .tablero { grid-template-columns: repeat(10, 28px); }
   .btn { font-size: 13px; padding: 10px; }
 }
+
+
+.pos-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ficha-panel {
+  font-size: 22px;
+  transition: transform 0.2s;
+}
+
+.ficha-draggable {
+  cursor: grab;
+  animation: llamar 0.8s infinite alternate;
+}
+
+.ficha-draggable:hover { transform: scale(1.4); }
+.ficha-draggable:active { cursor: grabbing; }
+
+@keyframes llamar {
+  from { transform: scale(1) rotate(-10deg); }
+  to   { transform: scale(1.3) rotate(10deg); }
+}
+
+.drag-hint {
+  font-size: 11px;
+  color: #FFD700;
+  font-weight: bold;
+  animation: parpadeo 0.8s infinite alternate;
+}
+
+@keyframes parpadeo {
+  from { opacity: 1; }
+  to   { opacity: 0.2; }
+}
