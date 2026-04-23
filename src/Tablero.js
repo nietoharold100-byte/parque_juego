@@ -90,15 +90,6 @@ function Tablero() {
     moverJugador(turno, destEsperado, resultado);
   };
 
-  // Drop desde el panel (ficha en posición 0)
-  const handleDropDesdePanel = (e) => {
-    e.preventDefault();
-    if (!modoDrag || !dadoLanzado || ganador) return;
-    const resultado = dado;
-    const destEsperado = posiciones[turno] + resultado;
-    moverJugador(turno, destEsperado, resultado);
-  };
-
   const lanzarDadoModo = () => {
     if (ganador || dadoLanzado) return;
     setDadoAnimando(true);
