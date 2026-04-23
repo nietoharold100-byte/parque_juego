@@ -1,0 +1,29 @@
+.casilla {
+  width: 60px;
+  height: 60px;
+  border: 1px solid #555;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  font-size: 11px;
+  background-color: #f0d9b5;
+}
+
+.casilla:nth-child(odd) { background-color: #b58863; }
+.casilla.serpiente-cabeza { background-color: #ff6b6b !important; }
+.casilla.escalera-inicio  { background-color: #6bffb8 !important; }
+
+.numero {
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  font-size: 9px;
+  color: #333;
+  font-weight: bold;
+}
+
+.jugadores { display: flex; gap: 2px; }
+.ficha { font-size: 18px; }
+.icono { font-size: 16px; }

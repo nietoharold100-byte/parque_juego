@@ -1,0 +1,72 @@
+.juego {
+  display: flex;
+  gap: 30px;
+  justify-content: center;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  padding: 20px;
+}
+
+.tablero {
+  display: grid;
+  grid-template-columns: repeat(10, 60px);
+  border: 3px solid #333;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  min-width: 220px;
+}
+
+.estado {
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  background: #222;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 10px;
+  width: 100%;
+}
+
+.posiciones { font-size: 16px; text-align: left; width: 100%; }
+
+.dado {
+  font-size: 50px;
+  animation: pop 0.3s ease;
+}
+
+@keyframes pop {
+  0%   { transform: scale(0.5); }
+  100% { transform: scale(1); }
+}
+
+.btn {
+  padding: 12px 24px;
+  font-size: 16px;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  width: 100%;
+}
+
+.btn:hover { background: #45a049; }
+.btn.ganador { background: #FFD700; color: #333; }
+
+.historial {
+  width: 100%;
+  font-size: 13px;
+  background: #f5f5f5;
+  padding: 10px;
+  border-radius: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.historial h3 { margin: 0 0 8px; font-size: 14px; }
+.historial p  { margin: 3px 0; }
